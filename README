@@ -1,3 +1,6 @@
+Obtenção de U(v) gerando assim uma aproximação de W(v) com um erro de 0.05%.
+Este repositório contém um código em Python que utiliza as bibliotecas NumPy  estimar a aproximação da função W(v). A estimação é feita por meio de MCMC e distribuição de Dirichlet
+
 import numpy as np
 import matplotlib.pyplot as plt
 import time
