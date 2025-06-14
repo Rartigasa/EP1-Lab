@@ -1,0 +1,2 @@
+Obtenção de U(v) gerando assim uma aproximação de W(v) com um erro de 0.05%.
+Este repositório contém um código em Python que utiliza as bibliotecas NumPy e SciPy para estimar a aproximação da função W(v). O número de simulações necessárias é determinado com base em uma margem de erro e um nível de confiança especificado.
