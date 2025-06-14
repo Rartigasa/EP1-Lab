@@ -1,0 +1,87 @@
+# **Obtenção de U(v) gerando assim uma aproximação de W(v) com um erro de 0.05%.**
+
+## _Este repositório contém um código em Python que utiliza as bibliotecas NumPy  estimar a aproximação da função W(v). A estimação é feita por meio de MCMC e distribuição de Dirichlet_
+
+import numpy as np
+import matplotlib.pyplot as plt
+import time
+
+x = np.array([2, 3, 4])
+y = np.array([1, 1, 1])
+alpha = x + y
+k = 3000
+m = len(x)
+
+n_amostras = 30000
+burn_in = 5000
+sigma = 0.5
+
+def densidade_posterior(theta, alpha):
+    if np.any(theta <= 0) or np.any(theta >= 1):
+        return 0
+    return np.prod(theta ** (alpha - 1))
+
+
+theta_atual = np.random.dirichlet(alpha)
+
+amostras = np.empty((n_amostras, m))
+
+cov_proposta = sigma ** 2 * (np.eye(m) - np.ones((m, m)) / m)
+
+start_time = time.time()
+
+posterior_atual = densidade_posterior(theta_atual, alpha)
+
+for i in range(n_amostras + burn_in):
+    proposta = theta_atual + np.random.multivariate_normal(np.zeros(m), cov_proposta)
+    proposta = np.abs(proposta)
+    proposta = proposta / np.sum(proposta)
+
+    posterior_proposta = densidade_posterior(proposta, alpha)
+
+    if posterior_atual == 0:
+        aceita = True
+    else:
+        aceita = np.random.uniform() < min(1, posterior_proposta / posterior_atual)
+
+    if aceita:
+        theta_atual = proposta
+        posterior_atual = posterior_proposta
+
+    if i >= burn_in:
+        amostras[i - burn_in] = theta_atual
+
+
+log_densidades = np.sum((alpha - 1) * np.log(amostras), axis=1)
+densidades = np.exp(log_densidades)
+
+densidades_class = np.sort(densidades)
+bin_size = len(densidades) // k
+
+v_pontos = densidades_class[(np.arange(1, k + 1) * bin_size) - 1]
+U_v = np.arange(1, k + 1) / k
+
+def U(v):
+    return np.interp(v, v_pontos, U_v, left=0.0, right=1.0)
+
+
+vs = np.linspace(v_pontos[0], v_pontos[-1], 300)
+us = U(vs)
+
+plt.plot(vs, us, label='U(v) ~ W(v)', color='blue')
+plt.xlabel('v')
+plt.ylabel('U(v)')
+plt.title('Aproximação da função de verdade W(v) via MCMC')
+plt.grid(True)
+plt.legend()
+plt.show()
+
+for i in range(11):
+    v_test = v_pontos[0] + i * (v_pontos[-1] - v_pontos[0]) / 10
+    u_val = U(v_test)
+    print(f"U({i+1}) = {u_val:.5f}")
+    if u_val >= 1:
+        break
+
+end_time = time.time()
+print(f"Tempo total de execução: {end_time - start_time:.2f} segundos")
